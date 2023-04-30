@@ -2,7 +2,8 @@ version: "3.11"
 
 services:
   app:
-    image: golang
+    build:
+      dockerfile: Dockerfile
     tty: true
     volumes:
       - .:/go/src

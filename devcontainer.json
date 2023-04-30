@@ -1,0 +1,35 @@
+{
+    "name": "Go Development",
+    "dockerComposeFile": "docker-compose.yml",
+    "service": "app",
+    "workspaceFolder": "/go/src",
+    "customizations": {
+      "vscode": {
+        "settings": {
+          "go.useLanguageServer": true,
+          "go.gopath": "/go",
+          "go.goroot": "/usr/local/go",
+          "go.toolsGopath": "/go/bin",
+          "go.formatTool": "goimports",
+          "go.lintTool": "golangci-lint",
+          "go.lintFlags": [
+            "--fast"
+          ],
+          "editor.formatOnSave": true,
+          "files.eol": "\n",
+          "files.insertFinalNewline": true
+        },
+        "extensions": [
+          "golang.go",
+          "editorconfig.editorconfig"
+        ]
+      }
+    },
+    "containerEnv": {
+      "GOPATH": "/go",
+      "GOROOT": "/usr/local/go"
+    },
+    "forwardPorts": [],
+    "postCreateCommand": "go mod tidy && go mod vendor && go mod verify"
+  }
+  

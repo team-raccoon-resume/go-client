@@ -1,9 +1,11 @@
 package main
 
 import (
+	"bytes"
 	"errors"
-	"net/http"
 	"io"
+	"net/http"
+
 	// "bytes"
 	"encoding/json"
 
@@ -16,26 +18,38 @@ type Intro struct {
 
 type ResumeClient struct {
 	httpClient *http.Client
-	endpoint string
+	endpoint   string
 }
 
 func NewResumeClient(url string) *ResumeClient {
 	return &ResumeClient{
 		httpClient: &http.Client{},
-		endpoint: url,
+		endpoint:   url,
 	}
 }
 
-func (c* ResumeClient) newRequest(requestType, requestPath string) (*http.Request, error) {
-	log.Debug("Starting a new request", "Type", requestType, "Path", c.endpoint + requestPath)
-	req, err := http.NewRequest(requestType, c.endpoint + requestPath, nil)
+func (c *ResumeClient) newRequest(requestType, requestPath string) (*http.Request, error) {
+	log.Debug("Starting a new request", "Type", requestType, "Path", c.endpoint+requestPath)
+	req, err := http.NewRequest(requestType, c.endpoint+requestPath, nil)
 	if err != nil {
 		return nil, err
 	}
 	return req, nil
 }
 
-// func (c *ResumeClient) RequestWithJsonBody() ( ,error)
+func (c *ResumeClient) newRequestWithBody(requestType, requestPath string, requestBody map[string]string) (*http.Request, error) {
+	log.Debug("Starting a new request", "Type", requestType, "Path", c.endpoint+requestPath, "Body", requestBody)
+	jsonBody, err := json.Marshal(requestBody)
+	if err != nil {
+		return nil, err
+	}
+	byteBody := bytes.NewReader(jsonBody)
+	req, err := http.NewRequest(requestType, c.endpoint+requestPath, byteBody)
+	if err != nil {
+		return nil, err
+	}
+	return req, nil
+}
 
 func (c *ResumeClient) apiCall(requestType, requestPath string) (*http.Response, error) {
 	log.Debug("Starting an api call", "Type", requestType, "Path", requestPath)
@@ -58,27 +72,26 @@ func (c *ResumeClient) apiCall(requestType, requestPath string) (*http.Response,
 func (c *ResumeClient) GetIntros() (map[string]Intro, error) {
 	path := "/intros"
 
-    resp, err := c.apiCall("GET", path)
-    if err != nil {
-        log.Fatal("Error in retrieving data", "Error:", err)
-    }
+	resp, err := c.apiCall("GET", path)
+	if err != nil {
+		log.Fatal("Error in retrieving data", "Error:", err)
+	}
 
-    defer resp.Body.Close()
-    bodyBytes, err := io.ReadAll(resp.Body)
+	defer resp.Body.Close()
+	bodyBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}
 
-    // Convert response body to Todo struct
+	// Convert response body to Todo struct
 	var intros map[string]Intro
-    err = json.Unmarshal(bodyBytes, &intros)
+	err = json.Unmarshal(bodyBytes, &intros)
 	if err != nil {
 		return nil, err
 	}
 
 	return intros, nil
 }
-
 
 func main() {
 	log.SetLevel(log.DebugLevel)
@@ -88,8 +101,8 @@ func main() {
 
 	intros, err := resumeClient.GetIntros()
 	if err != nil {
-        log.Fatal("Error in retrieving data", "Error:", err)
+		log.Fatal("Error in retrieving data", "Error:", err)
 	}
-	
+
 	log.Debug("Just the DevOps position", "DevOps", intros["devops"].Markdown)
 }
